@@ -1,0 +1,19 @@
+<p-card *ngIf="chat" header="{{ chat.title }}" class="chat-window">
+  <div class="messages">
+    <div *ngFor="let msg of history" [ngClass]="msg.role">
+      <strong *ngIf="msg.role === 'user'">Εσύ:</strong>
+      <strong *ngIf="msg.role === 'assistant'">Βοηθός:</strong>
+      <span>{{ msg.content }}</span>
+    </div>
+  </div>
+
+  <div class="input-area">
+    <textarea
+      pInputTextarea
+      [(ngModel)]="newMessage"
+      rows="3"
+      placeholder="Πληκτρολόγησε μήνυμα..."
+    ></textarea>
+    <button pButton type="button" label="Αποστολή" (click)="sendMessage()" class="p-button-success"></button>
+  </div>
+</p-card>

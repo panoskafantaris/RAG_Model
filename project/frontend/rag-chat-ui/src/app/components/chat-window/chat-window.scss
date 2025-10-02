@@ -1,0 +1,47 @@
+.chat-window {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  margin-bottom: 1rem;
+
+  .user {
+    text-align: right;
+    margin: 0.5rem 0;
+    span {
+      background: #e0f7fa;
+      padding: 0.5rem 1rem;
+      border-radius: 10px;
+      display: inline-block;
+    }
+  }
+
+  .assistant {
+    text-align: left;
+    margin: 0.5rem 0;
+    span {
+      background: #f1f8e9;
+      padding: 0.5rem 1rem;
+      border-radius: 10px;
+      display: inline-block;
+    }
+  }
+}
+
+.input-area {
+  display: flex;
+  gap: 0.5rem;
+
+  textarea {
+    flex: 1;
+    resize: none;
+  }
+
+  button {
+    align-self: flex-end;
+  }
+}

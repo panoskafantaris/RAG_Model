@@ -1,0 +1,7 @@
+<p-listbox 
+  [options]="sessions" 
+  optionLabel="title" 
+  (onChange)="onSelectSession($event)">
+</p-listbox>
+
+<p-button label="New Chat" icon="pi pi-plus" (onClick)="createSession()"></p-button>

@@ -1,0 +1,26 @@
+# Core API Framework
+fastapi
+uvicorn[standard]
+pydantic
+python-multipart
+
+# LLM and Transformers
+transformers
+torch
+accelerate
+sentencepiece
+
+# LangChain for RAG
+langchain
+langchain-community
+
+# Vector Store
+faiss-cpu  # Use faiss-gpu if you have CUDA
+sentence-transformers
+
+# Embeddings
+huggingface-hub
+
+# Utilities
+python-dotenv
+aiofiles
