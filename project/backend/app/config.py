@@ -4,6 +4,8 @@ Centralizes all settings for easy modification and environment-specific configs.
 """
 import os
 from pathlib import Path
+# Add these imports at the top
+import torch
 
 # Base directories
 BASE_DIR = Path(__file__).parent.parent
@@ -15,6 +17,30 @@ INDEX_DIR = BASE_DIR / "faiss_index"
 # Ensure directories exist
 KNOWLEDGE_DIR.mkdir(parents=True, exist_ok=True)
 INSTRUCTIONS_DIR.mkdir(parents=True, exist_ok=True)
+
+# Add after the existing imports, before model configurations
+# GPU Configuration
+USE_GPU = torch.cuda.is_available()
+DEVICE = "cuda" if USE_GPU else "cpu"
+GPU_MEMORY_FRACTION = 0.8  # Use 80% of available GPU memory
+
+# Log GPU status
+if USE_GPU:
+    gpu_name = torch.cuda.get_device_name(0)
+    gpu_memory = torch.cuda.get_device_properties(0).total_memory / 1e9
+    print(f"✅ GPU detected: {gpu_name} ({gpu_memory:.1f} GB)")
+else:
+    print("⚠️ No GPU detected, using CPU")
+
+# Update LLM_CONFIG to include device
+LLM_CONFIG = {
+    "max_new_tokens": 512,
+    "temperature": 0.7,
+    "top_p": 0.9,
+    "do_sample": True,
+    "repetition_penalty": 1.1,
+    "device": DEVICE,  # Add this
+}
 
 # Model configurations
 LLM_MODEL_NAME = "ilsp/Llama-Krikri-8B-Instruct"

@@ -21,6 +21,7 @@ _vectorstore: Optional[FAISS] = None
 def get_embeddings() -> HuggingFaceEmbeddings:
     """
     Get or create embeddings model (singleton).
+    Uses GPU if available for faster embedding generation.
     
     Returns:
         HuggingFaceEmbeddings instance
@@ -28,16 +29,19 @@ def get_embeddings() -> HuggingFaceEmbeddings:
     global _embeddings
     
     if _embeddings is None:
+        from .config import DEVICE  # Import the device setting
+        
         logger.info(f"Loading embedding model: {EMBEDDING_MODEL_NAME}")
+        logger.info(f"Device: {DEVICE}")
+        
         _embeddings = HuggingFaceEmbeddings(
             model_name=EMBEDDING_MODEL_NAME,
-            model_kwargs={'device': 'cpu'},  # Change to 'cuda' if GPU available
-            encode_kwargs={'normalize_embeddings': True}  # Better similarity scores
+            model_kwargs={'device': DEVICE},  # Changed from 'cpu' to DEVICE
+            encode_kwargs={'normalize_embeddings': True}
         )
         logger.info("Embedding model loaded successfully")
     
     return _embeddings
-
 
 def init_vectorstore() -> FAISS:
     """

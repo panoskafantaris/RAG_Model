@@ -6,7 +6,7 @@ python-multipart
 
 # LLM and Transformers
 transformers
-torch
+# torch
 accelerate
 sentencepiece
 
@@ -15,7 +15,12 @@ langchain
 langchain-community
 
 # Vector Store
-faiss-cpu  # Use faiss-gpu if you have CUDA
+# faiss-cpu  # Use faiss-gpu if you have CUDA
+# For CUDA 11.8 (check your CUDA version with: nvidia-smi)
+torch
+torchvision
+torchaudio
+# faiss-gpu  # GPU-accelerated vector search
 sentence-transformers
 
 # Embeddings

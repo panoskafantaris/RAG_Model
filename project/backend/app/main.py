@@ -533,3 +533,46 @@ async def search_documents(q: str, k: int = 3):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Search failed"
         )
+        
+
+@app.get("/health", response_model=HealthResponse)
+async def health_check():
+    """
+    Check system health and service availability.
+    """
+    from datetime import datetime
+    from pathlib import Path
+    from .gpu_utils import get_gpu_info  # Add this import
+    
+    # Check vector store
+    vector_store_ok = False
+    try:
+        init_vectorstore()
+        vector_store_ok = True
+    except:
+        pass
+    
+    # Check knowledge directory
+    knowledge_dir_ok = KNOWLEDGE_DIR.exists()
+    
+    # Get GPU info
+    gpu_info = get_gpu_info()
+    
+    services = {
+        "vector_store": vector_store_ok,
+        "knowledge_directory": knowledge_dir_ok,
+        "llm": True
+    }
+    
+    # Add GPU info if available
+    if gpu_info:
+        services["gpu"] = True
+        services["gpu_info"] = gpu_info
+    else:
+        services["gpu"] = False
+    
+    return {
+        "status": "healthy" if vector_store_ok else "degraded",
+        "timestamp": datetime.utcnow().isoformat(),
+        "services": services
+    }

@@ -87,7 +87,7 @@ class HealthResponse(BaseModel):
     """Health check response."""
     status: str
     timestamp: str
-    services: Dict[str, bool]
+    services: Dict[str, Any]  # Changed from Dict[str, bool] to allow nested GPU info
 
 
 class StatsResponse(BaseModel):

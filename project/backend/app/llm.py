@@ -19,7 +19,7 @@ _pipe = None
 
 def init_llm():
     """
-    Initialize the LLM pipeline (lazy loading).
+    Initialize the LLM pipeline with GPU support.
     
     Returns:
         Hugging Face pipeline
@@ -33,7 +33,11 @@ def init_llm():
         return _pipe
     
     try:
+        from .config import DEVICE, GPU_MEMORY_FRACTION
+        import torch
+        
         logger.info(f"Loading LLM model: {LLM_MODEL_NAME}")
+        logger.info(f"Target device: {DEVICE}")
         
         # Load tokenizer
         if _tokenizer is None:
@@ -43,21 +47,44 @@ def init_llm():
             )
             logger.info("Tokenizer loaded")
         
-        # Load model
+        # Load model with GPU optimization
         if _model is None:
-            device = "cuda" if torch.cuda.is_available() else "cpu"
-            dtype = torch.float16 if torch.cuda.is_available() else torch.float32
+            # Determine dtype based on device
+            if DEVICE == "cuda":
+                dtype = torch.float16  # Use half precision on GPU for speed
+                logger.info("Using float16 (half precision) for GPU inference")
+            else:
+                dtype = torch.float32
+                logger.info("Using float32 for CPU inference")
             
-            logger.info(f"Loading model on {device} with dtype {dtype}")
+            logger.info(f"Loading model on {DEVICE} with dtype {dtype}")
             
-            _model = AutoModelForCausalLM.from_pretrained(
-                LLM_MODEL_NAME,
-                device_map="auto",
-                torch_dtype=dtype,
-                trust_remote_code=True,
-                low_cpu_mem_usage=True
-            )
+            # GPU-specific optimizations
+            if DEVICE == "cuda":
+                _model = AutoModelForCausalLM.from_pretrained(
+                    LLM_MODEL_NAME,
+                    device_map="auto",  # Automatically distribute model across GPUs
+                    torch_dtype=dtype,
+                    trust_remote_code=True,
+                    low_cpu_mem_usage=True,
+                    max_memory={0: f"{GPU_MEMORY_FRACTION}GiB"}  # Limit GPU memory
+                )
+            else:
+                _model = AutoModelForCausalLM.from_pretrained(
+                    LLM_MODEL_NAME,
+                    device_map="auto",
+                    torch_dtype=dtype,
+                    trust_remote_code=True,
+                    low_cpu_mem_usage=True
+                )
+            
             logger.info("Model loaded successfully")
+            
+            # Print memory usage if on GPU
+            if DEVICE == "cuda":
+                allocated = torch.cuda.memory_allocated(0) / 1e9
+                reserved = torch.cuda.memory_reserved(0) / 1e9
+                logger.info(f"GPU memory: {allocated:.2f}GB allocated, {reserved:.2f}GB reserved")
         
         # Create pipeline
         if _pipe is None:
@@ -74,7 +101,6 @@ def init_llm():
     except Exception as e:
         logger.error(f"Failed to initialize LLM: {e}")
         raise ModelLoadException(LLM_MODEL_NAME, e)
-
 
 def build_prompt(
     system_instruction: str,
