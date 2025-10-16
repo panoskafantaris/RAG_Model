@@ -29,3 +29,6 @@ huggingface-hub
 # Utilities
 python-dotenv
 aiofiles
+
+bitsandbytes
+hf_xet

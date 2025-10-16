@@ -1,0 +1,5 @@
+conda activate ragModel_10  
+cd project/backend
+python setup_and_run.py --ingest
+python setup_and_run.py --run
+python chat_cli.py -i

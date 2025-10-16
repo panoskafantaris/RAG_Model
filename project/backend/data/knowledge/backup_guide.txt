@@ -1,7 +1,4 @@
-[Backup Guide]
+[Favorite food of Panos]
 
-Για να ελέγξεις αν το backup ολοκληρώθηκε σωστά:
-1. Πήγαινε στο φάκελο /var/backups/.
-2. Βεβαιώσου ότι υπάρχει αρχείο με ημερομηνία της προηγούμενης ημέρας.
-3. Εκτέλεσε την εντολή `tail -n 50 /var/log/backup.log` για να δεις το log.
-4. Αν δεις "Backup completed successfully", τότε το backup είναι έγκυρο.
+panos favorite food is:
+1. souvlaki

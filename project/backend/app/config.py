@@ -1,11 +1,9 @@
 """
 Configuration management for the RAG system.
-Centralizes all settings for easy modification and environment-specific configs.
+Optimized for Llama-Krikri-3B on 6GB GPU + 16GB RAM.
 """
 import os
 from pathlib import Path
-# Add these imports at the top
-import torch
 
 # Base directories
 BASE_DIR = Path(__file__).parent.parent
@@ -13,37 +11,21 @@ DATA_DIR = BASE_DIR / "data"
 KNOWLEDGE_DIR = DATA_DIR / "knowledge"
 INSTRUCTIONS_DIR = DATA_DIR / "instructions"
 INDEX_DIR = BASE_DIR / "faiss_index"
+OFFLOAD_DIR = BASE_DIR / "offload"
 
 # Ensure directories exist
 KNOWLEDGE_DIR.mkdir(parents=True, exist_ok=True)
 INSTRUCTIONS_DIR.mkdir(parents=True, exist_ok=True)
+OFFLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
-# Add after the existing imports, before model configurations
-# GPU Configuration
-USE_GPU = torch.cuda.is_available()
-DEVICE = "cuda" if USE_GPU else "cpu"
-GPU_MEMORY_FRACTION = 0.8  # Use 80% of available GPU memory
+# Model configurations - Optimized for Greek language
+# Option 1: Greek-specific (if available and accessible)
+# LLM_MODEL_NAME = "ilsp/Llama-Krikri-3B-Instruct"
 
-# Log GPU status
-if USE_GPU:
-    gpu_name = torch.cuda.get_device_name(0)
-    gpu_memory = torch.cuda.get_device_properties(0).total_memory / 1e9
-    print(f"✅ GPU detected: {gpu_name} ({gpu_memory:.1f} GB)")
-else:
-    print("⚠️ No GPU detected, using CPU")
+# Option 2: Llama 3.2 (requires HuggingFace access approval)
+# LLM_MODEL_NAME = "meta-llama/Llama-3.2-3B-Instruct"
+LLM_MODEL_NAME = "google/gemma-2b-it"
 
-# Update LLM_CONFIG to include device
-LLM_CONFIG = {
-    "max_new_tokens": 512,
-    "temperature": 0.7,
-    "top_p": 0.9,
-    "do_sample": True,
-    "repetition_penalty": 1.1,
-    "device": DEVICE,  # Add this
-}
-
-# Model configurations
-LLM_MODEL_NAME = "ilsp/Llama-Krikri-8B-Instruct"
 EMBEDDING_MODEL_NAME = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
 
 # LLM Generation parameters
@@ -91,8 +73,8 @@ def load_system_instructions():
     return f"{persona}\n\n{rules}".strip()
 
 SYSTEM_INSTRUCTION = load_system_instructions() or """
-Είσαι ένας βοηθός πληροφορικής για το εσωτερικό τμήμα ΙΤ της εταιρείας.
-Απαντάς πάντα στα ελληνικά, εκτός αν ζητηθεί διαφορετικά.
-Οι απαντήσεις σου είναι σύντομες, κατανοητές και πρακτικές.
-Αν δεν γνωρίζεις κάτι, το δηλώνεις ξεκάθαρα.
+You are an IT assistant for the company's internal IT department.  
+You always respond in Greek, unless otherwise requested.  
+Your answers are short, clear, and practical.  
+If you don't know something, you state it clearly.
 """

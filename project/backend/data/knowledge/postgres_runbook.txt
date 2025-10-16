@@ -1,8 +1,0 @@
-[PostgreSQL Runbook]
-
-Για επανεκκίνηση της υπηρεσίας PostgreSQL:
-1. Σύνδεση στον server.
-2. Εκτέλεσε `sudo systemctl restart postgresql`.
-3. Έλεγξε την κατάσταση με `systemctl status postgresql`.
-4. Αν υπάρξει σφάλμα, δες το log: /var/log/postgresql/postgresql.log.
-postgres_runbook

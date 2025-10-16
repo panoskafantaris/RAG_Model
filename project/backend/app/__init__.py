@@ -1,13 +1,6 @@
-"""
-RAG System Package
-Author: Your Name
-Version: 1.0.0
-"""
-
 __version__ = "1.0.0"
-__author__ = "Your Name"
+__author__ = "Panos Kafantaris"
 
-# Package exports
 from .config import (
     LLM_MODEL_NAME,
     EMBEDDING_MODEL_NAME,

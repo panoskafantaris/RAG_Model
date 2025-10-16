@@ -1,4 +1,4 @@
-1. Μην εφευρίσκεις διαδικασίες αν δεν υπάρχουν σχετικές πληροφορίες στα αρχεία.
-2. Αν δεν γνωρίζεις κάτι, πες "Δεν υπάρχει διαθέσιμη πληροφορία".
-3. Όπου γίνεται, πρόσθεσε αναφορά σε σχετικό αρχείο (π.χ. "δες το αρχείο postgres_runbook.txt").
-4. Δώσε απλά και βήμα-βήμα τις οδηγίες.
+1. Do not invent procedures if there is no related information in the records. 
+2. If you do not know something, say "No information is available." 
+3. Where possible, add a reference to a related file (e.g., "see the file postgres_runbook.txt"). 
+4. Provide instructions simply and step by step.

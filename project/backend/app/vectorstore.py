@@ -6,6 +6,7 @@ from typing import List, Tuple, Optional
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain.schema import Document
+import torch
 
 from .config import EMBEDDING_MODEL_NAME, INDEX_DIR, RAG_CONFIG
 from .exceptions import VectorStoreNotInitializedException
@@ -21,7 +22,6 @@ _vectorstore: Optional[FAISS] = None
 def get_embeddings() -> HuggingFaceEmbeddings:
     """
     Get or create embeddings model (singleton).
-    Uses GPU if available for faster embedding generation.
     
     Returns:
         HuggingFaceEmbeddings instance
@@ -29,19 +29,21 @@ def get_embeddings() -> HuggingFaceEmbeddings:
     global _embeddings
     
     if _embeddings is None:
-        from .config import DEVICE  # Import the device setting
-        
         logger.info(f"Loading embedding model: {EMBEDDING_MODEL_NAME}")
-        logger.info(f"Device: {DEVICE}")
+        
+        # Auto-detect device
+        device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        logger.info(f"Device: {device}")
         
         _embeddings = HuggingFaceEmbeddings(
             model_name=EMBEDDING_MODEL_NAME,
-            model_kwargs={'device': DEVICE},  # Changed from 'cpu' to DEVICE
-            encode_kwargs={'normalize_embeddings': True}
+            model_kwargs={'device': device},
+            encode_kwargs={'normalize_embeddings': True}  # Better similarity scores
         )
         logger.info("Embedding model loaded successfully")
     
     return _embeddings
+
 
 def init_vectorstore() -> FAISS:
     """
