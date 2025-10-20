@@ -1,6 +1,3 @@
-"""
-GPU monitoring utilities for the RAG system.
-"""
 import torch
 from typing import Dict, Optional
 from .logger import setup_logger
