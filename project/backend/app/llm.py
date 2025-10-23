@@ -1,7 +1,3 @@
-"""
-Enhanced LLM handler optimized for Llama-Krikri-3B on 6GB GPU.
-Simpler loading strategy since 3B model fits comfortably in VRAM.
-"""
 from typing import Optional, List, Dict
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline, BitsAndBytesConfig
 import torch
@@ -13,14 +9,12 @@ from .logger import setup_logger
 
 logger = setup_logger(__name__)
 
-# Global instances
 _tokenizer: Optional[AutoTokenizer] = None
 _model: Optional[AutoModelForCausalLM] = None
 _pipe = None
 
 
 def check_system_resources():
-    """Check and log available system resources."""
     # Check GPU
     if torch.cuda.is_available():
         gpu_name = torch.cuda.get_device_name(0)
@@ -37,10 +31,6 @@ def check_system_resources():
 
 
 def get_quantization_config():
-    """
-    Get 4-bit quantization config for memory efficiency.
-    3B model with 4-bit quantization uses ~2-3GB VRAM.
-    """
     return BitsAndBytesConfig(
         load_in_4bit=True,
         bnb_4bit_compute_dtype=torch.float16,
@@ -50,16 +40,6 @@ def get_quantization_config():
 
 
 def init_llm():
-    """
-    Initialize the LLM pipeline for 3B model.
-    Optimized for 6GB GPU - model fits entirely in VRAM with quantization.
-    
-    Returns:
-        Hugging Face pipeline
-    
-    Raises:
-        ModelLoadException: If model fails to load
-    """
     global _tokenizer, _model, _pipe
     
     if _pipe is not None:
@@ -78,7 +58,7 @@ def init_llm():
                 LLM_MODEL_NAME,
                 trust_remote_code=True
             )
-            logger.info("✓ Tokenizer loaded")
+            logger.info("Tokenizer loaded")
         
         # Load model
         if _model is None:
@@ -87,8 +67,7 @@ def init_llm():
                 
                 # Strategy based on GPU memory
                 if gpu_memory >= 6:
-                    # Use 4-bit quantization - fits 3B model in ~2-3GB
-                    logger.info("Loading with 4-bit quantization for optimal memory usage")
+                    logger.info("Loading with 4-bit quantization")
                     
                     quantization_config = get_quantization_config()
                     
@@ -99,10 +78,9 @@ def init_llm():
                         trust_remote_code=True,
                         torch_dtype=torch.float16,
                     )
-                    logger.info("✓ Model loaded with 4-bit quantization")
+                    logger.info("Model loaded with 4-bit quantization")
                     
                 elif gpu_memory >= 4:
-                    # Use 8-bit quantization for smaller GPUs
                     logger.info("Loading with 8-bit quantization")
                     
                     _model = AutoModelForCausalLM.from_pretrained(
@@ -111,10 +89,9 @@ def init_llm():
                         device_map="auto",
                         trust_remote_code=True,
                     )
-                    logger.info("✓ Model loaded with 8-bit quantization")
+                    logger.info("Model loaded with 8-bit quantization")
                     
                 else:
-                    # Use float16 for very small GPUs
                     logger.info("Loading with float16")
                     
                     _model = AutoModelForCausalLM.from_pretrained(
@@ -123,11 +100,11 @@ def init_llm():
                         torch_dtype=torch.float16,
                         trust_remote_code=True,
                     )
-                    logger.info("✓ Model loaded with float16")
+                    logger.info("Model loaded with float16")
                     
             else:
                 # CPU loading
-                logger.info("Loading on CPU (this will be slower)")
+                logger.info("Loading on CPU")
                 
                 _model = AutoModelForCausalLM.from_pretrained(
                     LLM_MODEL_NAME,
@@ -136,7 +113,7 @@ def init_llm():
                     trust_remote_code=True,
                     low_cpu_mem_usage=True,
                 )
-                logger.info("✓ Model loaded on CPU")
+                logger.info("Model loaded on CPU")
         
         # Create pipeline
         if _pipe is None:
@@ -147,7 +124,7 @@ def init_llm():
                 tokenizer=_tokenizer,
                 **LLM_CONFIG
             )
-            logger.info("✓ Pipeline ready")
+            logger.info("Pipeline ready")
             
             # Log memory usage
             if torch.cuda.is_available():
@@ -174,29 +151,14 @@ def build_prompt(
     history: List[Dict[str, str]],
     user_query: str
 ) -> str:
-    """
-    Build a well-structured prompt for the LLM.
-    
-    Args:
-        system_instruction: System-level instructions
-        context: Retrieved documents context
-        history: Conversation history
-        user_query: Current user question
-    
-    Returns:
-        Formatted prompt string
-    """
-    # Start with system instruction
     prompt_parts = [
         "<|system|>",
         system_instruction.strip(),
         "</|system|>\n"
     ]
     
-    # Add conversation history (last 5 exchanges to avoid context overflow)
     if history:
         prompt_parts.append("<|history|>")
-        # Take last 10 messages (5 exchanges)
         recent_history = history[-10:] if len(history) > 10 else history
         
         for msg in recent_history:
@@ -206,36 +168,22 @@ def build_prompt(
         
         prompt_parts.append("</|history|>\n")
     
-    # Add retrieved context
     if context:
         prompt_parts.append("<|context|>")
-        prompt_parts.append("Σχετικές πληροφορίες από την βάση γνώσης:")
+        prompt_parts.append("Info From Database:")
         prompt_parts.append(context)
         prompt_parts.append("</|context|>\n")
     
-    # Add current query
     prompt_parts.append("<|query|>")
     prompt_parts.append(f"User: {user_query}")
     prompt_parts.append("</|query|>\n")
     
-    # Request response
     prompt_parts.append("Assistant:")
     
     return "\n".join(prompt_parts)
 
 
 def generate_answer(prompt: str, max_retries: int = 2) -> str:
-    """
-    Generate an answer from the LLM with retry logic.
-    Expected response time: 5-10 seconds with 3B model on GPU.
-    
-    Args:
-        prompt: Formatted prompt
-        max_retries: Number of retries on failure
-    
-    Returns:
-        Generated text
-    """
     for attempt in range(max_retries + 1):
         try:
             pipe = init_llm()
@@ -249,7 +197,6 @@ def generate_answer(prompt: str, max_retries: int = 2) -> str:
             import time
             start_time = time.time()
             
-            # Generate
             outputs = pipe(prompt)
             
             elapsed = time.time() - start_time
@@ -260,16 +207,13 @@ def generate_answer(prompt: str, max_retries: int = 2) -> str:
             
             generated_text = outputs[0]["generated_text"]
             
-            # Extract only the assistant's response
             if "Assistant:" in generated_text:
                 answer = generated_text.split("Assistant:")[-1].strip()
             else:
                 answer = generated_text[len(prompt):].strip()
             
-            # Clean up the response
             answer = answer.strip()
             
-            # Remove any trailing tags or artifacts
             if "</s>" in answer:
                 answer = answer.split("</s>")[0].strip()
             
@@ -280,35 +224,21 @@ def generate_answer(prompt: str, max_retries: int = 2) -> str:
         except Exception as e:
             logger.error(f"Generation attempt {attempt + 1} failed: {e}")
             
-            # Clear cache on error
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()
             
             if attempt == max_retries:
                 logger.error("All generation attempts failed")
-                return "Λυπάμαι, αντιμετώπισα πρόβλημα κατά τη δημιουργία της απάντησης. Παρακαλώ δοκιμάστε ξανά."
+                return "Error in generating answer."
     
-    return "Σφάλμα συστήματος."
+    return "System Error."
 
 
 def estimate_tokens(text: str) -> int:
-    """
-    Rough estimate of tokens in text.
-    
-    Args:
-        text: Input text
-    
-    Returns:
-        Estimated token count
-    """
-    # Rough estimate: 1 token ≈ 4 characters for multilingual text
     return len(text) // 4
 
 
 def clear_model_cache():
-    """
-    Clear model from memory. Useful for memory management.
-    """
     global _tokenizer, _model, _pipe
     
     _tokenizer = None

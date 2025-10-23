@@ -1,21 +1,14 @@
 #!/usr/bin/env python3
-"""
-Comprehensive GPU Diagnostic Script
-This will help identify why GPU is not detected
-"""
-
 import sys
 import subprocess
 import os
 
 def print_section(title):
-    """Print a formatted section header."""
     print("\n" + "="*60)
     print(f"  {title}")
     print("="*60)
 
 def run_command(cmd, description):
-    """Run a shell command and display output."""
     print(f"\n[{description}]")
     print(f"Command: {cmd}")
     print("-" * 40)
@@ -33,59 +26,53 @@ def run_command(cmd, description):
             print(f"Error output: {result.stderr.strip()}")
         return result.returncode == 0
     except subprocess.TimeoutExpired:
-        print("⚠️  Command timed out")
+        print("  Command timed out")
         return False
     except Exception as e:
-        print(f"❌ Error running command: {e}")
+        print(f" Error running command: {e}")
         return False
 
 def check_nvidia_driver():
-    """Check NVIDIA driver installation."""
     print_section("1. NVIDIA Driver Check")
     
-    # Check nvidia-smi
     if run_command("nvidia-smi", "NVIDIA System Management Interface"):
-        print("✅ NVIDIA driver is installed and working")
+        print("   NVIDIA driver is installed and working")
         return True
     else:
-        print("❌ NVIDIA driver not found or not working")
+        print(" NVIDIA driver not found or not working")
         print("\nTo install NVIDIA drivers:")
         print("  Ubuntu/Debian: sudo apt install nvidia-driver-XXX")
         print("  Windows: Download from https://www.nvidia.com/drivers")
         return False
 
 def check_cuda():
-    """Check CUDA installation."""
     print_section("2. CUDA Installation Check")
     
-    # Check nvcc (CUDA compiler)
     if run_command("nvcc --version", "CUDA Compiler Version"):
-        print("✅ CUDA toolkit is installed")
+        print(" CUDA toolkit is installed")
         cuda_found = True
     else:
-        print("❌ CUDA toolkit not found")
+        print(" CUDA toolkit not found")
         print("\nTo install CUDA:")
         print("  Visit: https://developer.nvidia.com/cuda-downloads")
         cuda_found = False
     
-    # Check CUDA environment variables
     print("\n[CUDA Environment Variables]")
     cuda_home = os.environ.get('CUDA_HOME') or os.environ.get('CUDA_PATH')
     if cuda_home:
         print(f"CUDA_HOME: {cuda_home}")
     else:
-        print("⚠️  CUDA_HOME not set")
+        print("  CUDA_HOME not set")
     
     ld_library_path = os.environ.get('LD_LIBRARY_PATH', '')
     if 'cuda' in ld_library_path.lower():
         print(f"LD_LIBRARY_PATH includes CUDA: {ld_library_path}")
     else:
-        print("⚠️  LD_LIBRARY_PATH doesn't include CUDA")
+        print("  LD_LIBRARY_PATH doesn't include CUDA")
     
     return cuda_found
 
 def check_pytorch():
-    """Check PyTorch installation and CUDA support."""
     print_section("3. PyTorch Configuration")
     
     try:
@@ -101,10 +88,10 @@ def check_pytorch():
                 props = torch.cuda.get_device_properties(i)
                 print(f"    Compute Capability: {props.major}.{props.minor}")
                 print(f"    Total Memory: {props.total_memory / 1024**3:.2f} GB")
-            print("✅ PyTorch can use GPU")
+            print(" PyTorch can use GPU")
             return True
         else:
-            print("❌ PyTorch CUDA support not available")
+            print(" PyTorch CUDA support not available")
             print("\nPossible reasons:")
             print("  1. PyTorch installed without CUDA support")
             print("  2. CUDA version mismatch")
@@ -112,29 +99,26 @@ def check_pytorch():
             return False
             
     except ImportError:
-        print("❌ PyTorch not installed")
+        print(" PyTorch not installed")
         return False
 
 def check_pytorch_installation_type():
-    """Check if PyTorch was installed with or without CUDA."""
     print_section("4. PyTorch Installation Type")
     
     try:
         import torch
         
-        # Check how PyTorch was installed
         print("\n[Checking PyTorch build]")
         
-        # Try to import CUDA-specific modules
         try:
             from torch.utils.cpp_extension import CUDA_HOME
             print(f"PyTorch CUDA_HOME: {CUDA_HOME}")
         except:
-            print("⚠️  PyTorch CUDA_HOME not accessible")
+            print("  PyTorch CUDA_HOME not accessible")
         
         # Check if this is CPU-only build
         if not hasattr(torch.version, 'cuda') or torch.version.cuda is None:
-            print("❌ This is a CPU-ONLY PyTorch build")
+            print(" This is a CPU-ONLY PyTorch build")
             print("\nTo install PyTorch with CUDA support:")
             print("  Visit: https://pytorch.org/get-started/locally/")
             print("\n  Example for CUDA 11.8:")
@@ -143,26 +127,24 @@ def check_pytorch_installation_type():
             print("    pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121")
             return False
         else:
-            print(f"✅ PyTorch built with CUDA {torch.version.cuda}")
+            print(f" PyTorch built with CUDA {torch.version.cuda}")
             return True
             
     except ImportError:
-        print("❌ PyTorch not installed")
+        print(" PyTorch not installed")
         return False
 
 def check_system_info():
-    """Check system information."""
     print_section("5. System Information")
     
     print(f"Python version: {sys.version}")
     print(f"Platform: {sys.platform}")
     
-    # Check if running in WSL
     try:
         with open('/proc/version', 'r') as f:
             version_info = f.read()
             if 'microsoft' in version_info.lower():
-                print("⚠️  Running in WSL (Windows Subsystem for Linux)")
+                print("  Running in WSL (Windows Subsystem for Linux)")
                 print("Note: WSL2 with GPU support requires special setup")
     except:
         pass
@@ -173,7 +155,6 @@ def check_system_info():
         run_command("lsmod | grep nvidia", "Loaded NVIDIA kernel modules")
 
 def check_pip_packages():
-    """Check relevant pip packages."""
     print_section("6. Relevant Python Packages")
     
     packages = ['torch', 'torchvision', 'torchaudio', 'transformers', 
@@ -195,16 +176,15 @@ def check_pip_packages():
                         print(f"✅ {package}: {version}")
                         break
             else:
-                print(f"❌ {package}: Not installed")
+                print(f" {package}: Not installed")
         except:
-            print(f"❌ {package}: Error checking")
+            print(f" {package}: Error checking")
 
 def provide_recommendations(driver_ok, cuda_ok, pytorch_ok, pytorch_cuda_build):
-    """Provide recommendations based on diagnostic results."""
     print_section("RECOMMENDATIONS")
     
     if not driver_ok:
-        print("\n🔧 Step 1: Install NVIDIA Driver")
+        print("\n Step 1: Install NVIDIA Driver")
         print("   Your system doesn't have NVIDIA drivers installed.")
         print("   Install appropriate drivers for your GPU:")
         print("   - Ubuntu: sudo ubuntu-drivers autoinstall")
@@ -212,13 +192,13 @@ def provide_recommendations(driver_ok, cuda_ok, pytorch_ok, pytorch_cuda_build):
         print("   - After installation, reboot your system")
         
     elif not cuda_ok:
-        print("\n🔧 Step 2: Install CUDA Toolkit")
+        print("\n Step 2: Install CUDA Toolkit")
         print("   NVIDIA driver is present but CUDA toolkit is missing.")
         print("   Visit: https://developer.nvidia.com/cuda-downloads")
         print("   Install CUDA toolkit matching your driver version.")
         
     elif not pytorch_cuda_build:
-        print("\n🔧 Step 3: Reinstall PyTorch with CUDA Support")
+        print("\n Step 3: Reinstall PyTorch with CUDA Support")
         print("   Your PyTorch installation doesn't have CUDA support.")
         print("\n   1. Uninstall current PyTorch:")
         print("      pip uninstall torch torchvision torchaudio")
@@ -232,7 +212,7 @@ def provide_recommendations(driver_ok, cuda_ok, pytorch_ok, pytorch_cuda_build):
         print("      pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121")
         
     elif not pytorch_ok:
-        print("\n🔧 Troubleshooting Required")
+        print("\n Troubleshooting Required")
         print("   Everything seems installed but PyTorch can't access GPU.")
         print("   Try:")
         print("   1. Restart your system")
@@ -241,7 +221,7 @@ def provide_recommendations(driver_ok, cuda_ok, pytorch_ok, pytorch_cuda_build):
         print("   4. Check nvidia-smi output for errors")
         
     else:
-        print("\n✅ Everything looks good!")
+        print("\n Everything looks good!")
         print("   GPU should be accessible. If your application still")
         print("   doesn't use GPU, check application-specific settings.")
 

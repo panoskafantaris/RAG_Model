@@ -1,7 +1,3 @@
-"""
-Complete document ingestion pipeline.
-Handles file upload, text extraction, chunking, and indexing.
-"""
 import os
 from pathlib import Path
 from typing import List, Optional
@@ -19,24 +15,12 @@ logger = setup_logger(__name__)
 
 
 async def save_upload(file: UploadFile) -> str:
-    """
-    Save uploaded file to knowledge directory.
-    
-    Args:
-        file: Uploaded file
-    
-    Returns:
-        Path to saved file
-    """
     try:
-        # Ensure directory exists
         KNOWLEDGE_DIR.mkdir(parents=True, exist_ok=True)
         
-        # Create safe filename
         filename = file.filename.replace("/", "_").replace("\\", "_")
         filepath = KNOWLEDGE_DIR / filename
         
-        # Save file
         content = await file.read()
         
         with open(filepath, "wb") as f:
@@ -51,16 +35,7 @@ async def save_upload(file: UploadFile) -> str:
 
 
 def load_text_file(filepath: Path) -> str:
-    """
-    Load text from a file with encoding fallback.
-    
-    Args:
-        filepath: Path to file
-    
-    Returns:
-        File content as string
-    """
-    encodings = ['utf-8', 'utf-8-sig', 'latin-1', 'cp1252']
+    encodings = ['utf-8', 'utf-8-sig', 'cp1252']
     
     for encoding in encodings:
         try:
@@ -75,18 +50,8 @@ def load_text_file(filepath: Path) -> str:
 
 
 def load_documents_from_directory(directory: Path) -> List[Document]:
-    """
-    Load all text documents from a directory.
-    
-    Args:
-        directory: Directory path
-    
-    Returns:
-        List of LangChain Documents
-    """
     documents = []
     
-    # Supported file extensions
     supported_extensions = {'.txt', '.md', '.text'}
     
     if not directory.exists():
@@ -98,7 +63,6 @@ def load_documents_from_directory(directory: Path) -> List[Document]:
             try:
                 content = load_text_file(filepath)
                 
-                # Create document with metadata
                 doc = Document(
                     page_content=content,
                     metadata={
@@ -118,19 +82,9 @@ def load_documents_from_directory(directory: Path) -> List[Document]:
 
 
 def chunk_documents(documents: List[Document]) -> List[Document]:
-    """
-    Split documents into smaller chunks for better retrieval.
-    
-    Args:
-        documents: List of documents
-    
-    Returns:
-        List of chunked documents
-    """
     if not documents:
         return []
     
-    # Create text splitter
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=RAG_CONFIG["chunk_size"],
         chunk_overlap=RAG_CONFIG["chunk_overlap"],
@@ -138,10 +92,8 @@ def chunk_documents(documents: List[Document]) -> List[Document]:
         separators=["\n\n", "\n", ". ", " ", ""]
     )
     
-    # Split documents
     chunked_docs = text_splitter.split_documents(documents)
     
-    # Add chunk metadata
     for i, doc in enumerate(chunked_docs):
         doc.metadata["chunk_id"] = i
     
@@ -150,16 +102,6 @@ def chunk_documents(documents: List[Document]) -> List[Document]:
 
 
 def ingest_directory(directory: Path = KNOWLEDGE_DIR, rebuild: bool = False) -> dict:
-    """
-    Ingest all documents from a directory into the vector store.
-    
-    Args:
-        directory: Directory containing documents
-        rebuild: If True, rebuild index from scratch
-    
-    Returns:
-        Dictionary with ingestion statistics
-    """
     try:
         logger.info(f"Starting ingestion from {directory} (rebuild={rebuild})")
         
@@ -168,7 +110,6 @@ def ingest_directory(directory: Path = KNOWLEDGE_DIR, rebuild: bool = False) -> 
             logger.info("Rebuilding vector store from scratch")
             reset_vectorstore()
         
-        # Load documents
         documents = load_documents_from_directory(directory)
         
         if not documents:
@@ -180,10 +121,8 @@ def ingest_directory(directory: Path = KNOWLEDGE_DIR, rebuild: bool = False) -> 
                 "chunks_created": 0
             }
         
-        # Chunk documents
         chunked_docs = chunk_documents(documents)
         
-        # Add to vector store
         success = add_documents(chunked_docs)
         
         if success:
@@ -208,15 +147,6 @@ def ingest_directory(directory: Path = KNOWLEDGE_DIR, rebuild: bool = False) -> 
 
 
 async def ingest_single_file(filepath: str) -> dict:
-    """
-    Ingest a single file into the vector store.
-    
-    Args:
-        filepath: Path to the file
-    
-    Returns:
-        Dictionary with ingestion result
-    """
     try:
         path = Path(filepath)
         
@@ -234,10 +164,8 @@ async def ingest_single_file(filepath: str) -> dict:
             }
         )
         
-        # Chunk document
         chunked_docs = chunk_documents([doc])
         
-        # Add to vector store
         success = add_documents(chunked_docs)
         
         if success:

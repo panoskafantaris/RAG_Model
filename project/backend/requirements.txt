@@ -1,32 +1,22 @@
-# Core API Framework
 fastapi
 uvicorn[standard]
 pydantic
 python-multipart
 
-# LLM and Transformers
 transformers
-# torch
 accelerate
 sentencepiece
 
-# LangChain for RAG
 langchain
 langchain-community
 
-# Vector Store
-# faiss-cpu  # Use faiss-gpu if you have CUDA
-# For CUDA 11.8 (check your CUDA version with: nvidia-smi)
 torch
 torchvision
 torchaudio
-# faiss-gpu  # GPU-accelerated vector search
 sentence-transformers
 
-# Embeddings
 huggingface-hub
 
-# Utilities
 python-dotenv
 aiofiles
 

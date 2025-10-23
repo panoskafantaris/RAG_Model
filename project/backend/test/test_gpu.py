@@ -1,7 +1,4 @@
 #!/usr/bin/env python3
-"""
-Test GPU setup and performance.
-"""
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -15,13 +12,12 @@ logger = setup_logger(__name__)
 
 
 def test_gpu_availability():
-    """Test if GPU is available."""
     logger.info("=" * 50)
     logger.info("Testing GPU Availability")
     logger.info("=" * 50)
     
     if torch.cuda.is_available():
-        logger.info("✅ GPU is available!")
+        logger.info(" GPU is available!")
         gpu_info = get_gpu_info()
         
         if gpu_info:
@@ -30,7 +26,7 @@ def test_gpu_availability():
             logger.info(f"CUDA Version: {gpu_info['cuda_version']}")
             logger.info(f"PyTorch Version: {gpu_info['pytorch_version']}")
     else:
-        logger.warning("⚠️  GPU is NOT available. Using CPU.")
+        logger.warning("  GPU is NOT available. Using CPU.")
         logger.info("To use GPU, ensure:")
         logger.info("1. You have an NVIDIA GPU")
         logger.info("2. CUDA is installed")
@@ -38,7 +34,6 @@ def test_gpu_availability():
 
 
 def test_embedding_speed():
-    """Compare embedding generation speed on CPU vs GPU."""
     logger.info("\n" + "=" * 50)
     logger.info("Testing Embedding Speed")
     logger.info("=" * 50)
@@ -51,7 +46,7 @@ def test_embedding_speed():
         "Πώς κάνω restart το PostgreSQL;",
         "How do I create a new Linux user?",
         "What is the backup procedure?",
-    ] * 10  # 30 texts total
+    ] * 10 
     
     logger.info(f"Generating embeddings for {len(test_texts)} texts...")
     
@@ -59,14 +54,13 @@ def test_embedding_speed():
     _ = embeddings.embed_documents(test_texts)
     elapsed = time.time() - start_time
     
-    logger.info(f"✅ Time taken: {elapsed:.2f} seconds")
+    logger.info(f" Time taken: {elapsed:.2f} seconds")
     logger.info(f"Average per text: {elapsed/len(test_texts):.3f} seconds")
     
     log_gpu_memory()
 
 
 def test_llm_inference():
-    """Test LLM inference speed."""
     logger.info("\n" + "=" * 50)
     logger.info("Testing LLM Inference")
     logger.info("=" * 50)
@@ -87,11 +81,10 @@ def test_llm_inference():
     
     elapsed = time.time() - start_time
     
-    logger.info(f"✅ Time taken: {elapsed:.2f} seconds")
+    logger.info(f" Time taken: {elapsed:.2f} seconds")
     logger.info(f"Response: {outputs[0]['generated_text']}")
     
     log_gpu_memory()
-
 
 if __name__ == "__main__":
     test_gpu_availability()

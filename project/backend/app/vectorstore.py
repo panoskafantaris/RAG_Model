@@ -1,7 +1,3 @@
-"""
-Enhanced vector store with proper error handling and initialization.
-Manages FAISS index for semantic document retrieval.
-"""
 from typing import List, Tuple, Optional
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
@@ -14,24 +10,15 @@ from .logger import setup_logger
 
 logger = setup_logger(__name__)
 
-# Global instances (singleton pattern)
 _embeddings: Optional[HuggingFaceEmbeddings] = None
 _vectorstore: Optional[FAISS] = None
 
-
 def get_embeddings() -> HuggingFaceEmbeddings:
-    """
-    Get or create embeddings model (singleton).
-    
-    Returns:
-        HuggingFaceEmbeddings instance
-    """
     global _embeddings
     
     if _embeddings is None:
         logger.info(f"Loading embedding model: {EMBEDDING_MODEL_NAME}")
         
-        # Auto-detect device
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
         logger.info(f"Device: {device}")
         
@@ -44,17 +31,7 @@ def get_embeddings() -> HuggingFaceEmbeddings:
     
     return _embeddings
 
-
 def init_vectorstore() -> FAISS:
-    """
-    Initialize or load the FAISS vector store.
-    
-    Returns:
-        FAISS vectorstore instance
-    
-    Raises:
-        VectorStoreNotInitializedException: If index doesn't exist
-    """
     global _vectorstore
     
     if _vectorstore is not None:
@@ -81,18 +58,7 @@ def init_vectorstore() -> FAISS:
         logger.error(f"Failed to load FAISS index: {e}")
         raise VectorStoreNotInitializedException()
 
-
 def retrieve(query: str, k: int = None) -> List[Tuple[str, dict, float]]:
-    """
-    Retrieve relevant documents for a query with similarity scores.
-    
-    Args:
-        query: User's question
-        k: Number of documents to retrieve (default from config)
-    
-    Returns:
-        List of tuples: (content, metadata, score)
-    """
     if k is None:
         k = RAG_CONFIG["top_k"]
     
@@ -117,38 +83,26 @@ def retrieve(query: str, k: int = None) -> List[Tuple[str, dict, float]]:
                     similarity
                 ))
         
-        logger.info(f"Retrieved {len(filtered_results)} relevant documents for query")
+        logger.info(f"Retrieved {len(filtered_results)} relevant documents")
         return filtered_results
     
     except VectorStoreNotInitializedException:
-        logger.warning("Vector store not initialized, returning empty results")
+        logger.warning("Vector store not initialized")
         return []
     except Exception as e:
         logger.error(f"Error during retrieval: {e}")
         return []
 
-
 def add_documents(documents: List[Document]) -> bool:
-    """
-    Add new documents to the vector store.
-    
-    Args:
-        documents: List of LangChain Document objects
-    
-    Returns:
-        True if successful
-    """
     global _vectorstore
     
     try:
         embeddings = get_embeddings()
         
         if _vectorstore is None:
-            # Create new index
             logger.info("Creating new FAISS index")
             _vectorstore = FAISS.from_documents(documents, embeddings)
         else:
-            # Add to existing index
             logger.info(f"Adding {len(documents)} documents to existing index")
             _vectorstore.add_documents(documents)
         
@@ -165,7 +119,6 @@ def add_documents(documents: List[Document]) -> bool:
 
 
 def reset_vectorstore():
-    """Reset the vector store (useful for testing or rebuilding)."""
     global _vectorstore
     _vectorstore = None
     logger.info("Vector store reset")

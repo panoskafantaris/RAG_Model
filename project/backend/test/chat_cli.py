@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
 """
-Command Line Interface for RAG Chat System
-Allows you to interact with the server from terminal.
-
 Usage:
     # Simple one-shot query
     python chat_cli.py "Πώς κάνω restart το PostgreSQL;"
@@ -37,33 +34,22 @@ class Colors:
 
 
 def print_header(text: str):
-    """Print colored header."""
     print(f"\n{Colors.BOLD}{Colors.BLUE}{text}{Colors.END}")
 
-
 def print_success(text: str):
-    """Print success message."""
     print(f"{Colors.GREEN}{text}{Colors.END}")
 
-
 def print_error(text: str):
-    """Print error message."""
     print(f"{Colors.RED}Error: {text}{Colors.END}", file=sys.stderr)
 
-
 def print_warning(text: str):
-    """Print warning message."""
     print(f"{Colors.YELLOW}{text}{Colors.END}")
 
-
 def print_answer(text: str):
-    """Print AI answer."""
     print(f"\n{Colors.CYAN}Assistant:{Colors.END}")
     print(text)
 
-
 def print_sources(sources: list):
-    """Print source documents."""
     if not sources:
         return
     
@@ -73,9 +59,7 @@ def print_sources(sources: list):
         source_name = src.get('source', 'Unknown')
         print(f"  {i}. {source_name} (relevance: {score:.2f})")
 
-
 def check_server() -> bool:
-    """Check if server is running."""
     try:
         response = requests.get(f"{BASE_URL}/health", timeout=5)
         return response.status_code == 200
@@ -84,9 +68,7 @@ def check_server() -> bool:
     except Exception:
         return False
 
-
 def create_chat(title: str = "CLI Chat") -> Optional[str]:
-    """Create a new chat session."""
     try:
         response = requests.post(
             f"{BASE_URL}/chats",
@@ -106,24 +88,11 @@ def create_chat(title: str = "CLI Chat") -> Optional[str]:
         print_error(f"Failed to create chat: {e}")
         return None
 
-
 def send_message(message: str, chat_id: Optional[str] = None) -> dict:
-    """
-    Send a message to the server.
-    
-    Args:
-        message: User message
-        chat_id: Optional chat ID (if None, uses stateless endpoint)
-    
-    Returns:
-        Response dictionary with answer and sources
-    """
     try:
         if chat_id:
-            # Use stateful chat endpoint
             url = f"{BASE_URL}/chats/{chat_id}/message"
         else:
-            # Use stateless endpoint
             url = f"{BASE_URL}/chat"
         
         print("message: ", message)
@@ -149,9 +118,7 @@ def send_message(message: str, chat_id: Optional[str] = None) -> dict:
         print_error(f"Failed to send message: {e}")
         return None
 
-
 def list_chats():
-    """List all available chats."""
     try:
         response = requests.get(f"{BASE_URL}/chats", timeout=10)
         
@@ -175,15 +142,8 @@ def list_chats():
     except Exception as e:
         print_error(f"Failed to list chats: {e}")
 
-
 def interactive_mode(chat_id: Optional[str] = None):
-    """
-    Start interactive chat session.
-    
-    Args:
-        chat_id: Optional existing chat ID
-    """
-    print_header("🤖 RAG Chat - Interactive Mode")
+    print_header(" RAG Chat - Interactive Mode")
     print("Type 'exit' or 'quit' to end the session")
     print("Type 'new' to start a new chat")
     print("Type 'list' to see all chats")
@@ -194,7 +154,6 @@ def interactive_mode(chat_id: Optional[str] = None):
     
     while True:
         try:
-            # Get user input
             if current_chat_id:
                 prompt = f"{Colors.GREEN}You [{current_chat_id[:8]}]:{Colors.END} "
             else:
@@ -234,7 +193,7 @@ def interactive_mode(chat_id: Optional[str] = None):
                 continue
             
             # Send message
-            print(f"{Colors.YELLOW}⏳ Thinking...{Colors.END}")
+            print(f"{Colors.YELLOW} Thinking...{Colors.END}")
             
             result = send_message(user_input, current_chat_id)
             
@@ -251,19 +210,10 @@ def interactive_mode(chat_id: Optional[str] = None):
         except EOFError:
             break
 
-
 def one_shot_query(message: str, chat_id: Optional[str] = None, show_sources: bool = True):
-    """
-    Send a single query and display the result.
-    
-    Args:
-        message: User message
-        chat_id: Optional chat ID
-        show_sources: Whether to show source documents
-    """
     print_header("Sending query to server...")
     print(f"{Colors.GREEN}You:{Colors.END} {message}")
-    print(f"{Colors.YELLOW}⏳ Waiting for response...{Colors.END}")
+    print(f"{Colors.YELLOW} Waiting for response...{Colors.END}")
     
     result = send_message(message, chat_id)
     
@@ -357,23 +307,19 @@ Examples:
     
     args = parser.parse_args()
     
-    # Update base URL if provided
-    #global BASE_URL
+    # global BASE_URL
     BASE_URL = args.url.rstrip('/')
     
-    # Check server
     if not check_server():
         print_error(f"Cannot connect to server at {BASE_URL}")
         print_error("Make sure the server is running:")
         print("  python setup_and_run.py --run")
         sys.exit(1)
     
-    # Handle list command
     if args.list:
         list_chats()
         sys.exit(0)
     
-    # Handle new chat creation
     chat_id = args.chat_id
     if args.new_chat:
         chat_id = create_chat(args.new_chat)
@@ -384,15 +330,12 @@ Examples:
     if args.interactive:
         interactive_mode(chat_id)
     
-    # One-shot query
     elif args.message:
         result = send_message(args.message, chat_id)
         
         if args.json:
-            # Output raw JSON
             print(json.dumps(result, indent=2, ensure_ascii=False))
         else:
-            # Formatted output
             if result:
                 print_answer(result.get('answer', 'No answer received'))
                 
@@ -402,7 +345,6 @@ Examples:
                 sys.exit(1)
     
     else:
-        # No message and not interactive - show help
         parser.print_help()
 
 

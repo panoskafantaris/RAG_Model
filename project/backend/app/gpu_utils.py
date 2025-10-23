@@ -6,12 +6,6 @@ logger = setup_logger(__name__)
 
 
 def get_gpu_info() -> Optional[Dict]:
-    """
-    Get current GPU information and memory usage.
-    
-    Returns:
-        Dictionary with GPU stats or None if no GPU available
-    """
     if not torch.cuda.is_available():
         return None
     
@@ -34,14 +28,12 @@ def get_gpu_info() -> Optional[Dict]:
 
 
 def clear_gpu_cache():
-    """Clear GPU cache to free up memory."""
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
         logger.info("GPU cache cleared")
 
 
 def log_gpu_memory():
-    """Log current GPU memory usage."""
     if torch.cuda.is_available():
         allocated = torch.cuda.memory_allocated(0) / 1e9
         reserved = torch.cuda.memory_reserved(0) / 1e9
