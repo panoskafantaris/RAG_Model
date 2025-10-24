@@ -43,11 +43,9 @@ CORS_ORIGINS = [
     "http://127.0.0.1:4200",
 ]
 
-# Logging configuration
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 
-# System instructions (loaded from file or default)
 def load_system_instructions():
     persona_file = INSTRUCTIONS_DIR / "persona.txt"
     rules_file = INSTRUCTIONS_DIR / "rules.txt"

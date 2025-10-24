@@ -32,7 +32,6 @@ class Colors:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
-
 def print_header(text: str):
     print(f"\n{Colors.BOLD}{Colors.BLUE}{text}{Colors.END}")
 
@@ -230,7 +229,6 @@ def one_shot_query(message: str, chat_id: Optional[str] = None, show_sources: bo
             for key, value in metadata.items():
                 print(f"  {key}: {value}")
 
-
 def main():
     global BASE_URL
     parser = argparse.ArgumentParser(
@@ -346,7 +344,6 @@ Examples:
     
     else:
         parser.print_help()
-
 
 if __name__ == "__main__":
     main()

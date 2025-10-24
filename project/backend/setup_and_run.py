@@ -139,7 +139,6 @@ def main():
     
     elif args.run:
         # Only start server
-        # Check if vector store exists
         if not INDEX_DIR.exists():
             logger.warning("  Vector store not found!")
             logger.warning("The system will work but won't have RAG capabilities.")
